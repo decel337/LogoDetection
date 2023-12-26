@@ -1,103 +1,124 @@
 import tkinter as tk
-from tkinter import filedialog
+from tkinter import filedialog, ttk, messagebox
 from PIL import Image, ImageTk
+from logodetection import detect
 
-class ImageProcessor:
+class ImageProcessorApp:
     def __init__(self, root):
         self.root = root
         self.root.title("Image Processor")
-        self.root.geometry("800x600")  # Исходный размер окна
+        self.root.geometry("600x400")
 
-        # Создаем две рамки для левой и правой частей окна
-        self.left_frame = tk.Frame(root, bd=5, relief="groove")
-        self.left_frame.grid(row=0, column=0, padx=10, pady=10, sticky="nsew")
+        self.left_image = None
+        self.right_image = None
+        self.progress = False
 
-        self.right_frame = tk.Frame(root, bd=5, relief="groove")
-        self.right_frame.grid(row=0, column=1, padx=10, pady=10, sticky="nsew")
+        self.create_widgets()
+        self.progress_bar = ttk.Progressbar(root, orient="horizontal", mode="indeterminate")
 
-        # Левая часть: ячейка для отображения выбранного изображения
-        self.image_label = tk.Label(self.left_frame, text="Выберите изображение", font=("Helvetica", 12), bg="lightgray")
-        self.image_label.pack(expand=True, fill="both")
+        self.root.bind("<Configure>", self.update_image_sizes)
 
-        # Правая часть: ячейка для отображения обработанного изображения
-        self.processed_image_label = tk.Label(self.right_frame, text="Обработанное изображение", font=("Helvetica", 12), bg="lightgray")
-        self.processed_image_label.pack(expand=True, fill="both")
+    def create_widgets(self):
+        image_frame = tk.Frame(self.root)
+        image_frame.grid(row=0, column=0, padx=10, pady=10, sticky="nsew")
 
-        # Переменные для отслеживания текущего изображения и его пути
-        self.current_image = None
-        self.current_image_path = None
+        self.static_frame_left = tk.Canvas(image_frame, bg="white", highlightthickness=1, highlightbackground="black",
+                                      width=300, height=self.root.winfo_height() - 50)
+        self.static_frame_left.grid(row=1, column=0, padx=5, pady=5, sticky="nsew")
 
-        # Кнопка Загрузить изображение
-        self.load_button = tk.Button(root, text="Загрузить изображение", command=self.load_image)
-        self.load_button.grid(row=1, column=0, pady=10)
+        self.static_frame_right = tk.Canvas(image_frame, bg="white", highlightthickness=1, highlightbackground="black",
+                                       width=300, height=self.root.winfo_height() - 50)
+        self.static_frame_right.grid(row=1, column=1, padx=5, pady=5, sticky="nsew")
 
-        # Кнопка СТАРТ
-        self.start_button = tk.Button(root, text="СТАРТ", command=self.start_processing)
-        self.start_button.grid(row=2, column=0, columnspan=2, pady=10)
+        self.load_button = tk.Button(image_frame, text="Select image", command=self.load_image_left)
+        self.load_button.grid(row=2, column=0, pady=10, padx=(0, 50), sticky="ew")
 
-        # Кнопка Скачать изображение
-        self.download_button = tk.Button(root, text="Скачать изображение", command=self.download_image)
-        self.download_button.grid(row=1, column=1, pady=10)
+        self.save_button = tk.Button(image_frame, text="Save", command=self.save_image)
+        self.save_button.grid(row=2, column=1, pady=10, padx=(50, 0), sticky="ew")
 
-        # Растягиваем строки и столбцы, чтобы они заполняли доступное пространство
-        self.root.grid_rowconfigure(0, weight=1)
-        self.root.grid_columnconfigure(0, weight=1)
-        self.root.grid_columnconfigure(1, weight=1)
+        self.start_button = tk.Button(image_frame, text="Detect", command=self.process_image)
+        self.start_button.grid(row=3, column=0, columnspan=2, pady=10)
 
-    def load_image(self):
-        file_path = filedialog.askopenfilename(title="Выберите изображение",
-                                                filetypes=[("Изображения", "*.png;*.jpg;*.jpeg;*.gif")])
+        self.root.columnconfigure(0, weight=1)
+        self.root.rowconfigure(0, weight=1)
+
+        image_frame.columnconfigure(0, weight=1)
+        image_frame.columnconfigure(1, weight=1)
+        image_frame.rowconfigure(0, weight=0)
+        image_frame.rowconfigure(1, weight=1)
+
+    def load_image_left(self):
+        file_path = filedialog.askopenfilename(filetypes=[("Images", "*.png;*.jpg;*.jpeg")])
         if file_path:
-            self.display_image(file_path)
+            self.left_image = Image.open(file_path)
+            self.display_image(self.left_image, self.static_frame_left)
 
-    def display_image(self, file_path):
-        if self.current_image:
-            self.current_image.destroy()
+    def process_image(self):
+        if self.left_image:
+            self.disable_buttons()
+            self.progress = True
+            self.root.after(100, self.process)
 
-        self.image_label.config(text="")  # Скрываем текст
+            self.progress_bar.grid(row=4, column=0, columnspan=2, pady=10)
+            self.progress_bar.start()
 
-        image = Image.open(file_path)
+    def save_image(self):
+        if self.right_image:
+            file_path = filedialog.asksaveasfilename(defaultextension=".png", filetypes=[("Images", "*.png;*.jpg;*.jpeg")])
+            if file_path:
+                self.right_image.save(file_path)
 
-        # Проверяем размеры изображения
-        max_width = self.left_frame.winfo_width() - 20
-        max_height = self.left_frame.winfo_height() - 20
+    def process(self):
+        try:
+            image_for_process = self.left_image.copy()
+            processed_image = detect(image_for_process)
+            self.right_image = processed_image
+            self.display_image(self.right_image, self.static_frame_right)
+        except Exception as e:
+            messagebox.showerror("Error", f"{str(e)}")
 
-        if image.width > max_width or image.height > max_height:
-            # Если изображение больше максимальных размеров, масштабируем его
-            image.thumbnail((max_width, max_height), Image.ANTIALIAS)
+        self.progress_bar.stop()
+        self.progress_bar.grid_forget()
+        self.enable_buttons()
+        self.progress = False
+
+    def display_image(self, image, canvas):
+        window_width = self.root.winfo_width() // 2
+        window_height = self.root.winfo_height() - 50
+
+        scale_factor_width = window_width / image.width
+        scale_factor_height = window_height / image.height
+
+        scale_factor = min(scale_factor_width, scale_factor_height)
+
+        new_width = int(image.width * scale_factor)
+        new_height = int(image.height * scale_factor)
+        image = image.resize((new_width, new_height), Image.ANTIALIAS)
 
         photo = ImageTk.PhotoImage(image)
 
-        # Отображаем изображение в левой части
-        self.current_image = tk.Label(self.left_frame, image=photo, padx=10, pady=10)
-        self.current_image.image = photo
-        self.current_image.pack(expand=True, fill="both")
+        canvas.delete("all")
+        canvas.create_image(0, 0, anchor=tk.NW, image=photo)
+        canvas.image = photo
 
-        self.image_label.pack_forget()  # Убираем Label с текстом
-        self.current_image_path = file_path
+    def disable_buttons(self):
+        self.load_button.configure(state='disabled')
+        self.start_button.configure(state='disabled')
+        self.save_button.configure(state='disabled')
 
-    def start_processing(self):
-        if self.current_image_path:
-            # Отображаем обработанное изображение в правой части
-            processed_image = Image.open(self.current_image_path)
-            processed_image.thumbnail((self.left_frame.winfo_width() - 20, self.left_frame.winfo_height() - 20), Image.ANTIALIAS)
-            processed_photo = ImageTk.PhotoImage(processed_image)
+    def enable_buttons(self):
+        self.load_button.configure(state='normal')
+        self.start_button.configure(state='normal')
+        self.save_button.configure(state='normal')
 
-            self.processed_image_label.config(image=processed_photo)
-            self.processed_image_label.image = processed_photo
-            self.processed_image_label.pack(expand=True, fill="both")
-
-    def download_image(self):
-        if self.processed_image_label.image:
-            # Сохраняем обработанное изображение
-            file_path = filedialog.asksaveasfilename(defaultextension=".png",
-                                                        filetypes=[("PNG files", "*.png"), ("All files", "*.*")])
-            if file_path:
-                processed_image = Image.open(self.current_image_path)
-                processed_image.thumbnail((self.left_frame.winfo_width() - 20, self.left_frame.winfo_height() - 20), Image.ANTIALIAS)
-                processed_image.save(file_path)
+    def update_image_sizes(self, event):
+        if not self.progress:
+            if self.left_image:
+                self.display_image(self.left_image, self.static_frame_left)
+            if self.right_image:
+                self.display_image(self.right_image, self.static_frame_right)
 
 if __name__ == "__main__":
     root = tk.Tk()
-    app = ImageProcessor(root)
+    app = ImageProcessorApp(root)
     root.mainloop()
