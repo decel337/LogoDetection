@@ -66,10 +66,10 @@ class ImageProcessorApp:
         self.start_button.grid(row=4, column=0, columnspan=2, pady=10)
 
         self.label1 = tk.Label(image_frame, text=f"Threshold {self.threshold}")
-        self.label1.grid(row=5, column=0, pady=10)
+        self.label1.grid(row=4, column=0, pady=10)
 
         self.label2 = tk.Label(image_frame)
-        self.label2.grid(row=5, column=1, pady=10)
+        self.label2.grid(row=4, column=1, pady=10)
 
         self.root.columnconfigure(0, weight=1)
         self.root.rowconfigure(0, weight=1)
