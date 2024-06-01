@@ -3,6 +3,66 @@ from functools import reduce
 from PIL import Image
 import numpy as np
 from matplotlib.colors import rgb_to_hsv, hsv_to_rgb
+import scipy.stats as sc
+import pandas as pd
+
+# matrix = [[1, 1, 5, 5, 5, 5, 5, 5, 1, 1, 1, 5, 3, 3, 3],
+#           [5, 10, 5, 10, 10, 10, 5, 5, 10, 10, 5, 7.5, 10, 7.5, 7.5],
+#           [0, 10, 10, 0, 10, 0, 10, 0, 10, 0, 10, 5, 5, 10, 5],
+#           [1, 5, 5, 5, 1, 1, 1, 5, 1, 5, 5, 3, 3, 3, 5],
+#           [7, 26, 25, 20, 26, 16, 21, 15, 22, 16,21, 20.5, 21, 23.5, 20.5]]
+
+matrix = pd.read_csv(r"C:\Users\decel\Downloads\checkPlan.txt", sep='\t').transpose().to_numpy()
+# with open(r"C:\Users\decel\Downloads\checkfirst.csv", 'r') as file:
+#     lines = file.readlines()
+#
+# for line in lines:
+#     line = line.replace("п»ї", "")
+#     data_x.extend(map(float, line.strip().split()))
+#
+# with open(r"C:\Users\decel\Downloads\checksecond.csv", 'r') as file:
+#     lines = file.readlines()
+#
+# for line in lines:
+#     line = line.replace("п»ї", "")
+#     data_y.extend(map(float, line.strip().split()))
+
+
+
+# File_data = np.loadtxt(r"C:\Users\decel\Downloads\res.txt", dtype=float)
+
+# for i in File_data:
+#     correlations = []
+#     for j in File_data:
+#         correlations.append(str(sc.spearmanr(i, j).correlation))
+#     print(' '.join(correlations))
+
+print("-------------------------------------------------------")
+# for i in File_data:
+#     correlations = []
+#     for j in File_data:
+#         correlations.append(str(sc.kendalltau(i, j).statistic))
+#     print(' '.join(correlations))
+for i in matrix:
+    correlations = []
+    for j in matrix:
+        correlations.append(str(sc.kendalltau(i, j).statistic))
+    print(' '.join(correlations))
+
+# print(sc.kendalltau(data_x, data_y))
+# print(sc.kendalltau(File_data[0], File_data[1]).statistic)
+# print(sc.kendalltau(File_data[0], File_data[2]).statistic)
+# print(sc.kendalltau(File_data[0], File_data[3]).statistic)
+# print(sc.kendalltau(File_data[1], File_data[2]).statistic)
+# print(sc.kendalltau(File_data[1], File_data[3]).statistic)
+# print(sc.kendalltau(File_data[2], File_data[3]).statistic)
+# print("----------------------------------------------------------")
+# print(kendalltau(File_data[0], File_data[1]))
+# print(kendalltau(File_data[0], File_data[2]))
+# print(kendalltau(File_data[0], File_data[3]))
+# print(kendalltau(File_data[1], File_data[2]))
+# print(kendalltau(File_data[1], File_data[3]))
+# print(kendalltau(File_data[2], File_data[3]))
 
 def compose(*funcs):
     if funcs:

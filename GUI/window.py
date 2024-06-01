@@ -15,10 +15,9 @@ class ImageProcessorApp:
         self.root.config(menu=self.menu_bar)
 
         file_menu = tk.Menu(self.menu_bar, tearoff=0)
-        self.menu_bar.add_cascade(label="Edit", menu=file_menu)
-        file_menu.add_command(label="Clear", command=self.clear)
         self.menu_bar.add_cascade(label="Settings", menu=file_menu)
         file_menu.add_command(label="Threshold", command=self.thresh)
+        file_menu.add_command(label="Clear", command=self.clear)
 
         self.left_images = []
         self.right_images = []
