@@ -290,7 +290,7 @@ class GeneralWindow(QtWidgets.QMainWindow):
                                                              transforms.ToTensor(),
                                                              self.dataThread.normalize])
 
-        if (self.dataThread.type == "Picture2"):
+        if self.dataThread.type == "Picture2":
             self.dataThread.categories = self.dialogBox.catInput.text().split(",")
         self.dialogBox.reject()
         self.dataThread.start()
@@ -447,7 +447,7 @@ class GeneralWindow(QtWidgets.QMainWindow):
         output = self.networkThread.model(data)
         predict = output.data.max(1, keepdim=True)[1].item()
 
-        self.dialogBox = Test_Picture_Dialog(fileName[0], self.networkThread.categories[predict])
+        self.dialogBox = TestPictureDialog(fileName[0], self.networkThread.categories[predict])
 
     def loadTorchModel(self):
 
