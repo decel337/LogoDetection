@@ -1,8 +1,8 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 from WorldWidget import *
 from LayerMenu import *
-from DataDialog import *
-from DataThread import *
+from DataLoadCfgDialog import *
+from DataLoader import *
 from Layer import *
 from LayerDialog import *
 from GeneralWindow import *
@@ -36,7 +36,7 @@ class GeneralWindow(QtWidgets.QMainWindow):
         self.mousePosition = 0
         self.isResize = False
         self.dialogBox = "Dialog object"
-        self.dataThread = Data_Thread()
+        self.dataThread = DataLoader()
         self.networkThread = Network_Thread()
         self.initUserInterface()
 
@@ -264,16 +264,16 @@ class GeneralWindow(QtWidgets.QMainWindow):
 
     def createDataDialog(self, type):
         self.dataThread.type = type
-        self.dataThread.path_train = str(QtWidgets.QFileDialog.getExistingDirectory(self, "Select Training Directory"))
-        self.dataThread.path_test = str(QtWidgets.QFileDialog.getExistingDirectory(self, "Select Test Directory"))
+        self.dataThread.pathToTrain = str(QtWidgets.QFileDialog.getExistingDirectory(self, "Select Training Directory"))
+        self.dataThread.pathToTest = str(QtWidgets.QFileDialog.getExistingDirectory(self, "Select Test Directory"))
         if (type == "Picture2"):
-            self.dialogBox = Data_Dialog(True, True)
+            self.dialogBox = DataLoadCfgDialog(True, True)
         else:
-            self.dialogBox = Data_Dialog(True, False)
+            self.dialogBox = DataLoadCfgDialog(True, False)
         self.dialogBox.acceptedButton.accepted.connect(self.loadData)
 
     def loadData(self):
-        self.dataThread.batch_size = int(self.dialogBox.batch_spinBox.value())
+        self.dataThread.batchSize = int(self.dialogBox.batch_spinBox.value())
         self.dataThread.resize = int(self.dialogBox.resize_spinBox.value())
         if (self.dialogBox.norm_mean_input.text() == "" and self.dialogBox.norm_std_input.text() == ""):
             self.dataThread.transforms = transforms.Compose([transforms.Resize(self.dataThread.resize),  # 256*256
@@ -304,7 +304,7 @@ class GeneralWindow(QtWidgets.QMainWindow):
         return data
 
     def createTrainDialog(self):
-        if (self.dataThread.train_data != []):
+        if (self.dataThread.trainData != []):
             self.dialogBox = Train_Dialog()
             self.dialogBox.buttonBox.accepted.connect(self.startTrain)
         else:
@@ -388,9 +388,9 @@ class GeneralWindow(QtWidgets.QMainWindow):
 
         self.networkThread.use_gpu = self.dialogBox.gpu_radio_Button.isChecked()
 
-        self.networkThread.train_data = self.dataThread.train_data
-        self.networkThread.test_data = self.dataThread.test_data
-        self.networkThread.batch_size = self.dataThread.batch_size
+        self.networkThread.train_data = self.dataThread.trainData
+        self.networkThread.test_data = self.dataThread.testData
+        self.networkThread.batch_size = self.dataThread.batchSize
 
         self.networkThread.categories = self.dataThread.categories
 
@@ -403,15 +403,15 @@ class GeneralWindow(QtWidgets.QMainWindow):
 
         self.loadTorchModel()
         if type == "Testset":
-            if self.dataThread.test_data != []:
-                self.networkThread.test_data = self.dataThread.test_data
+            if self.dataThread.testData != []:
+                self.networkThread.test_data = self.dataThread.testData
                 self.networkThread.batch_size = 64
                 self.networkThread.test()
             else:
                 self.addLog("Please, load data to test")
 
         elif type == "Picture":
-            self.dialogBox = Data_Dialog(False, False)
+            self.dialogBox = DataLoadCfgDialog(False, False)
             self.dialogBox.acceptedButton.accepted.connect(self.testNetworkByPic)
 
     def testNetworkByPic(self):
