@@ -6,8 +6,8 @@ from DataLoader import *
 from Layer import *
 from LayerDialog import *
 from GeneralWindow import *
-from NetworkThread import *
-from NeuralNetwork import *
+from NetworkTrainer import *
+from Network import *
 from TestPictureDialog import *
 from WorldWidget import *
 
@@ -37,7 +37,7 @@ class GeneralWindow(QtWidgets.QMainWindow):
         self.isResize = False
         self.dialogBox = "Dialog object"
         self.dataThread = DataLoader()
-        self.networkThread = Network_Thread()
+        self.networkThread = NetworkTrainer()
         self.initUserInterface()
 
     def initUserInterface(self):
@@ -328,7 +328,7 @@ class GeneralWindow(QtWidgets.QMainWindow):
                     else:
                         pathToWeights = "path of current weights"
 
-                    self.networkThread.path_weights = pathToWeights
+                    self.networkThread.pathToWeights = pathToWeights
                     self.networkThread.categories = eval(line)[3]
                     first = False
                 else:
@@ -349,7 +349,7 @@ class GeneralWindow(QtWidgets.QMainWindow):
 
             file = open(fileDialog[0], "w")
 
-            file.write(str((relatives, firstLayer, self.networkThread.path_weights,
+            file.write(str((relatives, firstLayer, self.networkThread.pathToWeights,
                             self.networkThread.categories)) + "\n")
 
             for layer in saveLayers:
@@ -373,27 +373,27 @@ class GeneralWindow(QtWidgets.QMainWindow):
             file.close()
 
     def randomizeWeights(self, nonsense):
-        self.networkThread.path_weights = "path of current weights"
+        self.networkThread.pathToWeights = "path of current weights"
 
     def startTrain(self):
         self.loadTorchModel()
-        self.networkThread.set_optimizer(self.dialogBox.optimizer_comboBox.currentText(), self.dialogBox.lr_line_edit.text(),
-                                         self.dialogBox.momentum_line_edit.text())
+        self.networkThread.setOptimizer(self.dialogBox.optimizer_comboBox.currentText(), self.dialogBox.lr_line_edit.text(),
+                                        self.dialogBox.momentum_line_edit.text())
 
-        self.networkThread.set_criterion(self.dialogBox.loss_comboBox.currentText())
+        self.networkThread.setCriterion(self.dialogBox.loss_comboBox.currentText())
 
         self.networkThread.epochs = self.dialogBox.epochs_spinBox.value()
 
-        self.networkThread.use_gpu = self.dialogBox.gpu_radio_Button.isChecked()
+        self.networkThread.useGpu = self.dialogBox.gpu_radio_Button.isChecked()
 
-        self.networkThread.train_data = self.dataThread.trainData
-        self.networkThread.test_data = self.dataThread.testData
-        self.networkThread.batch_size = self.dataThread.batchSize
+        self.networkThread.trainData = self.dataThread.trainData
+        self.networkThread.testData = self.dataThread.testData
+        self.networkThread.batchSize = self.dataThread.batchSize
 
         self.networkThread.categories = self.dataThread.categories
 
         self.dialogBox.reject()
-        self.networkThread.save_path = QtWidgets.QFileDialog.getExistingDirectory()
+        self.networkThread.modelSavePath = QtWidgets.QFileDialog.getExistingDirectory()
 
         self.networkThread.start()
 
@@ -402,8 +402,8 @@ class GeneralWindow(QtWidgets.QMainWindow):
         self.loadTorchModel()
         if type == "Testset":
             if self.dataThread.testData != []:
-                self.networkThread.test_data = self.dataThread.testData
-                self.networkThread.batch_size = 64
+                self.networkThread.testData = self.dataThread.testData
+                self.networkThread.batchSize = 64
                 self.networkThread.test()
             else:
                 self.addLog("Please, load data to test")
@@ -451,11 +451,11 @@ class GeneralWindow(QtWidgets.QMainWindow):
 
     def loadTorchModel(self):
 
-        if self.networkThread.path_weights == "path of current weights":
+        if self.networkThread.pathToWeights == "path of current weights":
             self.networkThread.model = Network(self.networkBuilder.get_network())
         else:
-            if os.path.isfile(self.networkThread.path_weights):
-                self.networkThread.model = torch.load(self.networkThread.path_weights, map_location=torch.device('cpu'))
+            if os.path.isfile(self.networkThread.pathToWeights):
+                self.networkThread.model = torch.load(self.networkThread.pathToWeights, map_location=torch.device('cpu'))
 
     def ExportNetworkPy(self):
         fileDialog = QtWidgets.QFileDialog.getSaveFileName(self, "Export Network", "", "Python (*.py)")
