@@ -273,27 +273,25 @@ class GeneralWindow(QtWidgets.QMainWindow):
         self.dialogBox.acceptedButton.accepted.connect(self.loadData)
 
     def loadData(self):
-        self.dataThread.batchSize = int(self.dialogBox.batch_spinBox.value())
-        self.dataThread.resize = int(self.dialogBox.resize_spinBox.value())
-        if (self.dialogBox.norm_mean_input.text() == "" and self.dialogBox.norm_std_input.text() == ""):
-            self.dataThread.transforms = transforms.Compose([transforms.Resize(self.dataThread.resize),  # 256*256
+        self.dataThread.batchSize = int(self.dialogBox.batchUpDown.value())
+        self.dataThread.resize = int(self.dialogBox.resizeUpDown.value())
+        if (self.dialogBox.normMeanInput.text() == "" and self.dialogBox.normStdInput.text() == ""):
+            self.dataThread.transforms = transforms.Compose([transforms.Resize(self.dataThread.resize),
                                                              transforms.CenterCrop(self.dataThread.resize),
-                                                             # schneidet im zentrum ab
                                                              transforms.ToTensor(), ])
         else:
             self.dataThread.normalize = transforms.Normalize(
-                mean=self.normalizePicture(self.dialogBox.norm_mean_input.text()),
-                std=self.normalizePicture(self.dialogBox.norm_std_input.text())
+                mean=self.normalizePicture(self.dialogBox.normMeanInput.text()),
+                std=self.normalizePicture(self.dialogBox.normStdInput.text())
             )
 
-            self.dataThread.transforms = transforms.Compose([transforms.Resize(self.dataThread.resize),  # 256*256
+            self.dataThread.transforms = transforms.Compose([transforms.Resize(self.dataThread.resize),
                                                              transforms.CenterCrop(self.dataThread.resize),
-                                                             # schneidet im zentrum ab
                                                              transforms.ToTensor(),
                                                              self.dataThread.normalize])
 
         if (self.dataThread.type == "Picture2"):
-            self.dataThread.categories = self.dialogBox.cat_input.text().split(",")
+            self.dataThread.categories = self.dialogBox.catInput.text().split(",")
         self.dialogBox.reject()
         self.dataThread.start()
 
