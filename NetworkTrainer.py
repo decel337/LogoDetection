@@ -26,6 +26,8 @@ class NetworkTrainer(QtCore.QThread):
         self.useGpu = False
 
     def setOptimizer(self, type, lr, mom):
+        if lr == "":
+            lr = "0.8"
         if type == "SGD":
             if mom != "":
                 self.optimizer = optim.SGD(self.model.parameters(), lr=float(lr), momentum=float(mom))

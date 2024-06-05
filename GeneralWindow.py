@@ -395,7 +395,7 @@ class GeneralWindow(QtWidgets.QMainWindow):
         if type == "Testset":
             if self.dataThread.testData != []:
                 self.networkThread.testData = self.dataThread.testData
-                self.networkThread.batchSize = 64
+                self.networkThread.batchSize = self.dataThread.batchSize
                 self.networkThread.test()
             else:
                 self.addLog("Please, load data to test")
