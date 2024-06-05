@@ -1,4 +1,4 @@
-from PyQt5 import QtCore, QtWidgets
+from PyQt5 import QtCore
 
 import torch
 import torch.optim as optim
@@ -53,27 +53,20 @@ class NetworkTrainer(QtCore.QThread):
             target = torch.Tensor(target)
             if torch.cuda.is_available() and self.useGpu:
                 target = target.cuda()
-            data = Variable(data)
-            target = Variable(target)
-            self.optimizer.zero_grad()
             try:
+                data = Variable(data)
+                target = Variable(target)
+                self.optimizer.zero_grad()
                 out = self.model(data)
                 criterion = self.criterion
                 loss = criterion(out, target)
                 loss.backward()
                 self.optimizer.step()
+                self.signal.emit('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
+                    epoch, batchId * len(data), len(self.trainData) * self.batchSize,
+                           100. * batchId / len(self.trainData), loss.data))
             except Exception as ex:
-                msg = QtWidgets.QMessageBox()
-                msg.setIcon(QtWidgets.QMessageBox.Critical)
-                msg.setWindowTitle("Error train data")
-                msg.setText(f"Please, reload your data or check input config model. \nAn exception occurred: {ex}")
-                msg.setStandardButtons(QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel)
-                retval = msg.exec_()
-                return
-
-            self.signal.emit('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
-                epoch, batchId * len(data), len(self.trainData) * self.batchSize,
-                       100. * batchId / len(self.trainData), loss.data))
+                self.signal.emit(f'Error train: {ex}')
 
             batchId += + 1
 
@@ -86,6 +79,7 @@ class NetworkTrainer(QtCore.QThread):
         self.model.eval()
         loss = 0
         correct = 0
+        success = True
         incorrect = 0
         predictions = 0
         for data, target in self.testData:
@@ -103,22 +97,17 @@ class NetworkTrainer(QtCore.QThread):
                 loss += F.binary_cross_entropy(out, target, size_average=False).data
                 prediction = out.data.max(1, keepdim=True)[1]
                 predictions += len(prediction)
+                for i in range(len(prediction)):
+                    correct += 1 if (target[i][prediction[i].item()].item() == 1) else 0
+                    incorrect += 0 if (target[i][prediction[i].item()].item() == 1) else 1
             except Exception as error:
-                msg = QtWidgets.QMessageBox()
-                msg.setIcon(QtWidgets.QMessageBox.Critical)
-                msg.setWindowTitle("Error test image")
-                msg.setText(f"Please, reload your data. An exception occurred: {error}")
-                msg.setStandardButtons(QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel)
-                retval = msg.exec_()
-                return
+                self.signal.emit(f'Error test: {error}')
+                success = False
 
-            for i in range(len(prediction)):
-                correct += 1 if (target[i][prediction[i].item()].item() == 1) else 0
-                incorrect += 0 if (target[i][prediction[i].item()].item() == 1) else 1
-
-        loss = loss / len(self.testData) * self.batchSize
-        self.signal.emit('Average loss: ' + str(round(loss.item(), 6)))
-        self.signal.emit("Accuracy: " + str(round(100 * correct / (len(self.testData) * self.batchSize), 2)) + " %")
+        if success:
+            loss = loss / len(self.testData) * self.batchSize
+            self.signal.emit('Average loss: ' + str(round(loss.item(), 6)))
+            self.signal.emit("Accuracy: " + str(round(100 * correct / (len(self.testData) * self.batchSize), 2)) + " %")
 
     def run(self):
         for epoch in range(self.epochs):

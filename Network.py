@@ -5,7 +5,7 @@ import torch.nn as nn
 
 class Network(nn.Module):
     def __init__(self, layerList):
-        super(Network, ).__init__()
+        super(Network, self).__init__()
         self.functions = []
         layers = []
         for layer in layerList:

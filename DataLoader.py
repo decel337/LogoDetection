@@ -2,7 +2,7 @@ from PyQt5 import QtCore
 
 import torch
 from PIL import Image
-from os import listdir
+from os import listdir, path as osPath
 import random
 
 class DataLoader(QtCore.QThread):
@@ -37,8 +37,9 @@ class DataLoader(QtCore.QThread):
             numberOfFile = 0
 
             for directory in listdir(path):
-                files.append(listdir(path + "/" + directory))
-                numberOfFile += len(listdir(path + "/" + directory))
+                if osPath.isdir(f"{path}/{directory}"):
+                    files.append(listdir(path + "/" + directory))
+                    numberOfFile += len(listdir(path + "/" + directory))
 
             for i in range(numberOfFile):
                 dirIndex = random.randint(0, len(selectedCategoriesByIndex) - 1)

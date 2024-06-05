@@ -1,4 +1,6 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtCore import QRegExp
+from PyQt5.QtGui import QRegExpValidator
 
 class DataLoadCfgDialog(QtWidgets.QDialog):
     def __init__(self, hasBatch, isCatToSet):
@@ -9,6 +11,7 @@ class DataLoadCfgDialog(QtWidgets.QDialog):
         font14.setPointSize(14)
         font12 = QtGui.QFont()
         font12.setPointSize(12)
+
         # add button to window
         self.acceptedButton = QtWidgets.QDialogButtonBox(self)
         self.acceptedButton.setGeometry(QtCore.QRect(30, 240, 341, 32))
@@ -62,6 +65,9 @@ class DataLoadCfgDialog(QtWidgets.QDialog):
 
         self.normMeanInput = QtWidgets.QLineEdit(self.gridWidget)
         self.normMeanInput.setFont(font12)
+        reg_ex = QRegExp("^(0(\.\d{1,2})?|1(\.0{1,2})?)$")
+        inputValidator = QRegExpValidator(reg_ex, self.normMeanInput)
+        self.normMeanInput.setValidator(inputValidator)
         self.gridLayout.addWidget(self.normMeanInput, 2, 1, 1, 1)
 
         #add input for norm std
@@ -74,6 +80,10 @@ class DataLoadCfgDialog(QtWidgets.QDialog):
 
         self.normStdInput = QtWidgets.QLineEdit(self.gridWidget)
         self.normStdInput.setFont(font12)
+        reg_ex = QRegExp("^(0(\.\d{1,2})?|1(\.0{1,2})?)$")
+        inputValidator = QRegExpValidator(reg_ex, self.normStdInput)
+        self.normStdInput.setValidator(inputValidator)
+        self.normStdInput.setValidator(inputValidator)
         self.gridLayout.addWidget(self.normStdInput, 3, 1, 1, 1)
 
         #add input for categories

@@ -1,6 +1,5 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 
-
 class Layer(QtWidgets.QWidget):
     def __init__(self, parent):
         super().__init__(parent)
