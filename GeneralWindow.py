@@ -26,10 +26,9 @@ class GeneralWindow(QtWidgets.QMainWindow):
         self.mousePosition = 0
         self.isResize = False
         self.dialogBox = "Dialog object"
-        self.dataThread = DataLoader()
-        self.networkThread = NetworkTrainer()
+        self.dataLoader = DataLoader()
+        self.networkTrainer = NetworkTrainer()
         self.initUserInterface()
-        self.isLoad = False
 
     def initUserInterface(self):
         self.setObjectName("GeneralWindow")
@@ -193,9 +192,9 @@ class GeneralWindow(QtWidgets.QMainWindow):
         self.menuItems.addAction(self.menuTest.menuAction())
 
         self.localizeLanguage()
-        self.dataThread.signal.connect(self.addLog)
-        self.networkThread.signal.connect(self.addLog)
-        self.networkThread.signal2.connect(self.saveNetworkAfterTrain)
+        self.dataLoader.signal.connect(self.addLog)
+        self.networkTrainer.signal.connect(self.addLog)
+        self.networkTrainer.signal2.connect(self.saveNetworkAfterTrain)
         self.networkBuilder.signal.connect(self.randomizeWeights)
         QtCore.QMetaObject.connectSlotsByName(self)
 
@@ -253,9 +252,9 @@ class GeneralWindow(QtWidgets.QMainWindow):
         self.scrollLog.setWidget(self.logger)
 
     def createDataDialog(self, type):
-        self.dataThread.type = type
-        self.dataThread.pathToTrain = str(QtWidgets.QFileDialog.getExistingDirectory(self, "Select Training Directory"))
-        self.dataThread.pathToTest = str(QtWidgets.QFileDialog.getExistingDirectory(self, "Select Test Directory"))
+        self.dataLoader.type = type
+        self.dataLoader.pathToTrain = str(QtWidgets.QFileDialog.getExistingDirectory(self, "Select Training Directory"))
+        self.dataLoader.pathToTest = str(QtWidgets.QFileDialog.getExistingDirectory(self, "Select Test Directory"))
         if (type == "Naming"):
             self.dialogBox = DataLoadCfgDialog(True, True)
         else:
@@ -263,29 +262,29 @@ class GeneralWindow(QtWidgets.QMainWindow):
         self.dialogBox.acceptedButton.accepted.connect(self.loadData)
 
     def loadData(self):
-        if self.dataThread.isRunning() or self.networkThread.isRunning():
+        if self.dataLoader.isRunning() or self.networkTrainer.isRunning():
             return
-        self.dataThread.batchSize = int(self.dialogBox.batchUpDown.value())
-        self.dataThread.resize = int(self.dialogBox.resizeUpDown.value())
+        self.dataLoader.batchSize = int(self.dialogBox.batchUpDown.value())
+        self.dataLoader.resize = int(self.dialogBox.resizeUpDown.value())
         if (self.dialogBox.normMeanInput.text() == "" and self.dialogBox.normStdInput.text() == ""):
-            self.dataThread.transforms = transforms.Compose([transforms.Resize(self.dataThread.resize),
-                                                             transforms.CenterCrop(self.dataThread.resize),
+            self.dataLoader.transforms = transforms.Compose([transforms.Resize(self.dataLoader.resize),
+                                                             transforms.CenterCrop(self.dataLoader.resize),
                                                              transforms.ToTensor(), ])
         else:
-            self.dataThread.normalize = transforms.Normalize(
+            self.dataLoader.normalize = transforms.Normalize(
                 mean=self.normalizePicture(self.dialogBox.normMeanInput.text()),
                 std=self.normalizePicture(self.dialogBox.normStdInput.text())
             )
 
-            self.dataThread.transforms = transforms.Compose([transforms.Resize(self.dataThread.resize),
-                                                             transforms.CenterCrop(self.dataThread.resize),
+            self.dataLoader.transforms = transforms.Compose([transforms.Resize(self.dataLoader.resize),
+                                                             transforms.CenterCrop(self.dataLoader.resize),
                                                              transforms.ToTensor(),
-                                                             self.dataThread.normalize])
+                                                             self.dataLoader.normalize])
 
-        if self.dataThread.type == "Picture2":
-            self.dataThread.categories = self.dialogBox.catInput.text().split(",")
+        if self.dataLoader.type == "Picture2":
+            self.dataLoader.categories = self.dialogBox.catInput.text().split(",")
         self.dialogBox.reject()
-        self.dataThread.start()
+        self.dataLoader.start()
 
     def normalizePicture(self, string):
         data = string.split(",")
@@ -294,14 +293,14 @@ class GeneralWindow(QtWidgets.QMainWindow):
         return data
 
     def createTrainDialog(self):
-        if (self.dataThread.trainData != []):
+        if (self.dataLoader.trainData != []):
             self.dialogBox = NetworkTrainerCfgDialog()
             self.dialogBox.acceptedButton.accepted.connect(self.startTrain)
         else:
             self.addLog("Please, load data for start training")
 
     def loadNetwork(self):
-        if self.dataThread.isRunning() or self.networkThread.isRunning():
+        if self.dataLoader.isRunning() or self.networkTrainer.isRunning():
             return
         first = True
         fileDialog = QtWidgets.QFileDialog.getOpenFileName(self, "Load Network", "", "network (*.nx)")
@@ -325,8 +324,8 @@ class GeneralWindow(QtWidgets.QMainWindow):
                 else:
                     pathToWeights = "path of current weights"
 
-                self.networkThread.pathToWeights = pathToWeights
-                self.networkThread.categories = eval(line)[3]
+                self.networkTrainer.pathToWeights = pathToWeights
+                self.networkTrainer.categories = eval(line)[3]
                 first = False
             else:
                 layerLoad.append(eval(line))
@@ -346,8 +345,8 @@ class GeneralWindow(QtWidgets.QMainWindow):
 
             file = open(fileDialog[0], "w")
 
-            file.write(str((relatives, firstLayer, self.networkThread.pathToWeights,
-                            self.networkThread.categories)) + "\n")
+            file.write(str((relatives, firstLayer, self.networkTrainer.pathToWeights,
+                            self.networkTrainer.categories)) + "\n")
 
             for layer in saveLayers:
                 file.write(str(layer) + "\n")
@@ -363,47 +362,47 @@ class GeneralWindow(QtWidgets.QMainWindow):
 
         if fileDialog != ('', ''):
             file = open(fileDialog, "w")
-            file.write(str((relatives, firstLayer, path.split("/")[-1], self.networkThread.categories)) + "\n")
+            file.write(str((relatives, firstLayer, path.split("/")[-1], self.networkTrainer.categories)) + "\n")
 
             for layer in saveLayers:
                 file.write(str(layer) + "\n")
             file.close()
 
     def randomizeWeights(self, nonsense):
-        self.networkThread.pathToWeights = "path of current weights"
+        self.networkTrainer.pathToWeights = "path of current weights"
 
     def startTrain(self):
-        if self.dataThread.isRunning() or self.networkThread.isRunning():
+        if self.dataLoader.isRunning() or self.networkTrainer.isRunning():
             return
         self.loadTorchModel()
-        self.networkThread.setOptimizer(self.dialogBox.optimizerComboBox.currentText(), self.dialogBox.learningRateInput.text(),
-                                        self.dialogBox.momentumInput.text())
+        self.networkTrainer.setOptimizer(self.dialogBox.optimizerComboBox.currentText(), self.dialogBox.learningRateInput.text(),
+                                         self.dialogBox.momentumInput.text())
 
-        self.networkThread.setCriterion(self.dialogBox.lossComboBox.currentText())
+        self.networkTrainer.setCriterion(self.dialogBox.lossComboBox.currentText())
 
-        self.networkThread.epochs = self.dialogBox.epochsUpDown.value()
+        self.networkTrainer.epochs = self.dialogBox.epochsUpDown.value()
 
-        self.networkThread.useGpu = self.dialogBox.selectedGpu.isChecked()
+        self.networkTrainer.useGpu = self.dialogBox.selectedGpu.isChecked()
 
-        self.networkThread.trainData = self.dataThread.trainData
-        self.networkThread.testData = self.dataThread.testData
-        self.networkThread.batchSize = self.dataThread.batchSize
+        self.networkTrainer.trainData = self.dataLoader.trainData
+        self.networkTrainer.testData = self.dataLoader.testData
+        self.networkTrainer.batchSize = self.dataLoader.batchSize
 
-        self.networkThread.categories = self.dataThread.categories
+        self.networkTrainer.categories = self.dataLoader.categories
 
         self.dialogBox.reject()
-        self.networkThread.modelSavePath = QtWidgets.QFileDialog.getExistingDirectory()
-        self.networkThread.start()
+        self.networkTrainer.modelSavePath = QtWidgets.QFileDialog.getExistingDirectory()
+        self.networkTrainer.start()
 
     def testNetwork(self, type):
-        if self.dataThread.isRunning() or self.networkThread.isRunning():
+        if self.dataLoader.isRunning() or self.networkTrainer.isRunning():
             return
         self.loadTorchModel()
         if type == "Testset":
-            if self.dataThread.testData != []:
-                self.networkThread.testData = self.dataThread.testData
-                self.networkThread.batchSize = self.dataThread.batchSize
-                self.networkThread.test()
+            if self.dataLoader.testData != []:
+                self.networkTrainer.testData = self.dataLoader.testData
+                self.networkTrainer.batchSize = self.dataLoader.batchSize
+                self.networkTrainer.test()
             else:
                 self.addLog("Please, load data to test")
 
@@ -412,7 +411,7 @@ class GeneralWindow(QtWidgets.QMainWindow):
             self.dialogBox.acceptedButton.accepted.connect(self.testNetworkByPic)
 
     def testNetworkByPic(self):
-        if self.dataThread.isRunning() or self.networkThread.isRunning():
+        if self.dataLoader.isRunning() or self.networkTrainer.isRunning():
             return
         if self.dialogBox.normMeanInput.text() == "" and self.dialogBox.normStdInput.text() == "":
 
@@ -439,14 +438,14 @@ class GeneralWindow(QtWidgets.QMainWindow):
 
         data = torch.stack(data)
 
-        if next(self.networkThread.model.parameters()).is_cuda:
+        if next(self.networkTrainer.model.parameters()).is_cuda:
             data = data.cuda()
         data = Variable(data)
 
         try:
-            output = self.networkThread.model(data)
+            output = self.networkTrainer.model(data)
             predict = output.data.max(1, keepdim=True)[1].item()
-            self.dialogBox = TestPictureDialog(fileName[0], self.networkThread.categories[predict])
+            self.dialogBox = TestPictureDialog(fileName[0], self.networkTrainer.categories[predict])
         except Exception as error:
             msg = QtWidgets.QMessageBox()
             msg.setIcon(QtWidgets.QMessageBox.Critical)
@@ -457,13 +456,13 @@ class GeneralWindow(QtWidgets.QMainWindow):
             retval = msg.exec_()
 
     def loadTorchModel(self):
-        if self.dataThread.isRunning() or self.networkThread.isRunning():
+        if self.dataLoader.isRunning() or self.networkTrainer.isRunning():
             return
-        if os.path.isfile(self.networkThread.pathToWeights):
-            self.networkThread.model = torch.load(self.networkThread.pathToWeights, map_location=torch.device('cpu'))
+        if os.path.isfile(self.networkTrainer.pathToWeights):
+            self.networkTrainer.model = torch.load(self.networkTrainer.pathToWeights, map_location=torch.device('cpu'))
             self.addLog("Loaded torch model with weights")
         else:
-            self.networkThread.model = Network(self.networkBuilder.getNetwork())
+            self.networkTrainer.model = Network(self.networkBuilder.getNetwork())
             self.addLog("Loaded torch model without weights")
 
 
@@ -471,13 +470,13 @@ class GeneralWindow(QtWidgets.QMainWindow):
         fileDialog = QtWidgets.QFileDialog.getSaveFileName(self, "Export Network", "", "Python (*.py)")
         pathToWeights = fileDialog[0][:-3] + "_weights.pt"
 
-        resize = self.dataThread.resize
+        resize = self.dataLoader.resize
 
         py_data = ["import torch", "from torchvision import transforms", "from PIL import Image",
                    "from torch.autograd import Variable", "import torch.nn.functional as F",
                    "import torch.nn as nn", " ", "path_weights = '" + str(pathToWeights) + "'",
                    "path_picture =  'Your Path here'", "resize = " + str(resize), " ",
-                   "categories = " + str(self.networkThread.categories),
+                   "categories = " + str(self.networkTrainer.categories),
                    "transform = transforms.Compose([transforms.Resize(resize),",
                    "                                transforms.CenterCrop(resize),",
                    "                                transforms.ToTensor(), ])",
@@ -504,7 +503,7 @@ class GeneralWindow(QtWidgets.QMainWindow):
                    "print(categories[prediction])"]
 
         if fileDialog != ('', ''):
-            torch.save(self.networkThread.model, pathToWeights)
+            torch.save(self.networkTrainer.model, pathToWeights)
 
             file = open(fileDialog[0], "w")
             for line in py_data:
