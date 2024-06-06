@@ -198,14 +198,7 @@ class GeneralWindow(QtWidgets.QMainWindow):
         self.networkBuilder.signal.connect(self.randomizeWeights)
         QtCore.QMetaObject.connectSlotsByName(self)
 
-    def localizeLanguage(self):
-        localize = QtCore.QCoreApplication.translate
-        self.setWindowTitle("NNBuilder")
 
-    def scrollToBottom(self, minimum = None, maximum = None):
-        self.scrollLog.verticalScrollBar().setValue(
-            self.scrollLog.verticalScrollBar().maximum()
-        )
 
     def mouseMoveEvent(self, event):
         if self.isResize:
@@ -465,7 +458,14 @@ class GeneralWindow(QtWidgets.QMainWindow):
             self.networkTrainer.model = Network(self.networkBuilder.getNetwork())
             self.addLog("Loaded torch model without weights")
 
+    def localizeLanguage(self):
+        localize = QtCore.QCoreApplication.translate
+        self.setWindowTitle("NNBuilder")
 
+    def scrollToBottom(self, minimum = None, maximum = None):
+        self.scrollLog.verticalScrollBar().setValue(
+            self.scrollLog.verticalScrollBar().maximum()
+        )
     def ExportNetworkPy(self):
         fileDialog = QtWidgets.QFileDialog.getSaveFileName(self, "Export Network", "", "Python (*.py)")
         pathToWeights = fileDialog[0][:-3] + "_weights.pt"
