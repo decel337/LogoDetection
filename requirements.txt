@@ -2,3 +2,4 @@ Pillow==9.4.0
 PyQt5_sip==12.11.0
 torch==1.12.1
 torchvision==0.13.1
+pyinstaller=6.3.0
