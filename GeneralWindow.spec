@@ -2,7 +2,7 @@
 
 
 a = Analysis(
-    ['D:/work/LogoDetection/GeneralWindow.py'],
+    ['GeneralWindow.py'],
     pathex=[],
     binaries=[],
     datas=[],
