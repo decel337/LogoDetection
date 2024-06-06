@@ -124,7 +124,7 @@ class DataLoader(QtCore.QThread):
 
     def run(self):
 
-        if self.type == "Picture1":
+        if self.type == "Subfolders":
             self.methodSubfolders()
-        elif self.type == "Picture2":
+        elif self.type == "Naming":
             self.methodByImage()

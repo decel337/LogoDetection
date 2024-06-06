@@ -27,7 +27,7 @@ class NetworkTrainer(QtCore.QThread):
 
     def setOptimizer(self, type, lr, mom):
         if lr == "":
-            lr = "0.8"
+            lr = 0.1
         if type == "SGD":
             if mom != "":
                 self.optimizer = optim.SGD(self.model.parameters(), lr=float(lr), momentum=float(mom))

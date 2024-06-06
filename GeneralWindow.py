@@ -146,12 +146,12 @@ class GeneralWindow(QtWidgets.QMainWindow):
         self.dropoutAction.triggered.connect(lambda: self.buildLayer("Dropout"))
 
         self.picture1Action = QtWidgets.QAction(self)
-        self.picture1Action.setText("Picture1")
-        self.picture1Action.triggered.connect(lambda: self.createDataDialog("Picture1"))
+        self.picture1Action.setText("Subfolders")
+        self.picture1Action.triggered.connect(lambda: self.createDataDialog("Subfolders"))
 
         self.picture2Action = QtWidgets.QAction(self)
-        self.picture2Action.setText("Picture2")
-        self.picture2Action.triggered.connect(lambda: self.createDataDialog("Picture2"))
+        self.picture2Action.setText("Naming")
+        self.picture2Action.triggered.connect(lambda: self.createDataDialog("Naming"))
 
         self.trainAction = QtWidgets.QAction(self)
         self.trainAction.setText("Train")
@@ -256,7 +256,7 @@ class GeneralWindow(QtWidgets.QMainWindow):
         self.dataThread.type = type
         self.dataThread.pathToTrain = str(QtWidgets.QFileDialog.getExistingDirectory(self, "Select Training Directory"))
         self.dataThread.pathToTest = str(QtWidgets.QFileDialog.getExistingDirectory(self, "Select Test Directory"))
-        if (type == "Picture2"):
+        if (type == "Naming"):
             self.dialogBox = DataLoadCfgDialog(True, True)
         else:
             self.dialogBox = DataLoadCfgDialog(True, False)
