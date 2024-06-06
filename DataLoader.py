@@ -73,6 +73,10 @@ class DataLoader(QtCore.QThread):
 
                 self.categories = listdir(self.pathToTrain)
 
+            if len(dataList) > 0:
+                data.append((torch.stack(dataList), targetList))
+                self.signal.emit('Loaded batch ' + str(len(data)) + ' of ' + str(numberOfFile // batchSize + 1))
+                self.signal.emit('Percentage done: ' + str(round(100 * len(data) / (numberOfFile // batchSize + 1), 2)) + ' %')
     def methodByImage(self):
         for path in [self.pathToTrain, self.pathToTest]:
             batchSize = self.batchSize
@@ -103,6 +107,12 @@ class DataLoader(QtCore.QThread):
                     targetList = []
                     self.signal.emit('Loaded batch ' + str(len(data)) + ' of ' + str(int(len(listdir(path)) / batchSize)))
                     self.signal.emit('Percentage Done: ' + str(round(100 * len(data) / int(len(listdir(path)) / batchSize), 2)) + '%')
+
+            if len(dataList) > 0:
+                data.append((torch.stack(dataList), targetList))
+                self.signal.emit('Loaded batch ' + str(len(data)) + ' of ' + str(int(len(listdir(path)) / batchSize + 1)))
+                self.signal.emit(
+                    'Percentage Done: ' + str(round(100 * len(data) / int(len(listdir(path)) / batchSize + 1), 2)) + '%')
 
             if path == self.pathToTrain:
                 self.trainData = data

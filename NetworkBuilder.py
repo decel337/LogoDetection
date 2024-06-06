@@ -2,6 +2,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from Layer import LinearLayer, FunctionLayer, ViewLayer, ConvolutionLayer, PoolingLayer
 from LayerMenu import LayerMenu
 from LayerCfgDialog import LayerCfgDialog
+import random
 
 
 class NetworkBuilder(QtWidgets.QWidget):
@@ -193,12 +194,15 @@ class NetworkBuilder(QtWidgets.QWidget):
         drawer = QtGui.QPainter(self)
         drawer.setPen(QtGui.QColor(0, 0, 0))
         drawer.setFont(QtGui.QFont("Arial", 400))
-
+        if self.drawStart >= len(self.layers):
+            return
         if self.drawStart != -1:
             drawer.drawLine(self.layers[self.drawStart].x() + self.layers[self.drawStart].width() /
                              2, self.layers[self.drawStart].y() + self.layers[self.drawStart].height(),
                              self.posX, self.posY)
         for relative in self.relatives:
+            if relative[0] >= len(self.layers) or relative[1] >= len(self.layers):
+                continue
             drawer.drawLine(self.layers[relative[0]].x() + self.layers[relative[0]].width() / 2,
                              self.layers[relative[0]].y() + self.layers[relative[0]].height(),
                              self.layers[relative[1]].x() + self.layers[relative[1]].width() / 2,
@@ -252,5 +256,7 @@ class NetworkBuilder(QtWidgets.QWidget):
             end = relative[1] if (relative[1] < layerIdx) else relative[1] - 1
             newRelatives.append((start, end))
         if self.firstLayer >= layerIdx:
-            self.firstLayer = -1 if (self.firstLayer == layerIdx) else self.firstLayer - 1
+            self.firstLayer = (-1 if not self.layers else random.randint(0, len(self.layers)-1)) if (self.firstLayer == layerIdx) else self.firstLayer - 1
+            if self.firstLayer != - 1:
+                self.setFirstLayer(self.firstLayer)
         self.relatives = newRelatives

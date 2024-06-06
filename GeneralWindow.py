@@ -29,6 +29,7 @@ class GeneralWindow(QtWidgets.QMainWindow):
         self.dataThread = DataLoader()
         self.networkThread = NetworkTrainer()
         self.initUserInterface()
+        self.isLoad = False
 
     def initUserInterface(self):
         self.setObjectName("GeneralWindow")
@@ -262,6 +263,8 @@ class GeneralWindow(QtWidgets.QMainWindow):
         self.dialogBox.acceptedButton.accepted.connect(self.loadData)
 
     def loadData(self):
+        if self.dataThread.isRunning() or self.networkThread.isRunning():
+            return
         self.dataThread.batchSize = int(self.dialogBox.batchUpDown.value())
         self.dataThread.resize = int(self.dialogBox.resizeUpDown.value())
         if (self.dialogBox.normMeanInput.text() == "" and self.dialogBox.normStdInput.text() == ""):
@@ -298,7 +301,8 @@ class GeneralWindow(QtWidgets.QMainWindow):
             self.addLog("Please, load data for start training")
 
     def loadNetwork(self):
-
+        if self.dataThread.isRunning() or self.networkThread.isRunning():
+            return
         first = True
         fileDialog = QtWidgets.QFileDialog.getOpenFileName(self, "Load Network", "", "network (*.nx)")
         layerLoad = []
@@ -369,6 +373,8 @@ class GeneralWindow(QtWidgets.QMainWindow):
         self.networkThread.pathToWeights = "path of current weights"
 
     def startTrain(self):
+        if self.dataThread.isRunning() or self.networkThread.isRunning():
+            return
         self.loadTorchModel()
         self.networkThread.setOptimizer(self.dialogBox.optimizerComboBox.currentText(), self.dialogBox.learningRateInput.text(),
                                         self.dialogBox.momentumInput.text())
@@ -390,7 +396,8 @@ class GeneralWindow(QtWidgets.QMainWindow):
         self.networkThread.start()
 
     def testNetwork(self, type):
-
+        if self.dataThread.isRunning() or self.networkThread.isRunning():
+            return
         self.loadTorchModel()
         if type == "Testset":
             if self.dataThread.testData != []:
@@ -405,7 +412,8 @@ class GeneralWindow(QtWidgets.QMainWindow):
             self.dialogBox.acceptedButton.accepted.connect(self.testNetworkByPic)
 
     def testNetworkByPic(self):
-
+        if self.dataThread.isRunning() or self.networkThread.isRunning():
+            return
         if self.dialogBox.normMeanInput.text() == "" and self.dialogBox.normStdInput.text() == "":
 
             transmute = transforms.Compose([transforms.Resize(self.dialogBox.resizeUpDown.value()),
@@ -449,6 +457,8 @@ class GeneralWindow(QtWidgets.QMainWindow):
             retval = msg.exec_()
 
     def loadTorchModel(self):
+        if self.dataThread.isRunning() or self.networkThread.isRunning():
+            return
         if os.path.isfile(self.networkThread.pathToWeights):
             self.networkThread.model = torch.load(self.networkThread.pathToWeights, map_location=torch.device('cpu'))
             self.addLog("Loaded torch model with weights")

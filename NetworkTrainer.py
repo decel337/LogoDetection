@@ -84,6 +84,10 @@ class NetworkTrainer(QtCore.QThread):
         success = True
         incorrect = 0
         predictions = 0
+
+        if len(self.testData) == 0:
+            self.signal.emit(f'Not load data for test')
+
         for data, target in self.testData:
             if torch.cuda.is_available() and self.useGpu:
                 data = data.cuda()
