@@ -296,7 +296,7 @@ class GeneralWindow(QtWidgets.QMainWindow):
         if self.dataLoader.isRunning() or self.networkTrainer.isRunning():
             return
         first = True
-        fileDialog = QtWidgets.QFileDialog.getOpenFileName(self, "Load Network", "", "network (*.nx)")
+        fileDialog = QtWidgets.QFileDialog.getOpenFileName(self, "Load Network", "", "network (*.nnb)")
         layerLoad = []
         if fileDialog == ('', ''):
             return
@@ -333,7 +333,7 @@ class GeneralWindow(QtWidgets.QMainWindow):
         relatives = self.networkBuilder.relatives
         firstLayer = self.networkBuilder.firstLayer
 
-        fileDialog = QtWidgets.QFileDialog.getSaveFileName(self, "Save Network", "", "network (*.nx)")
+        fileDialog = QtWidgets.QFileDialog.getSaveFileName(self, "Save Network", "", "network (*.nnb)")
         if fileDialog != ('', ''):
 
             file = open(fileDialog[0], "w")
@@ -351,7 +351,7 @@ class GeneralWindow(QtWidgets.QMainWindow):
         firstLayer = self.networkBuilder.firstLayer
         saveLayers = self.networkBuilder.saveModel()
 
-        fileDialog = path[:-3] + "_Network.nx"
+        fileDialog = path[:-3] + "_Network.nnb"
 
         if fileDialog != ('', ''):
             file = open(fileDialog, "w")
